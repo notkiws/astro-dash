@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Build index.html: generates tile levels and injects them into the template."""
+"""Level generator and physics checks for ASTRO DASH 8-BIT.
+
+Produces the three tile maps (Grid + level1..level3) and validates them against the
+jump arc read straight out of game8_template.html, so a level can never ask for a
+jump the hero cannot make.
+"""
 import os, json, math, re
 
 H = 17
@@ -372,51 +377,5 @@ def reach_report(lv, rise_px, V, G, vRun):
 
 
 def js(obj):
+    """Serialise a level for injection into the template."""
     return json.dumps(obj, ensure_ascii=True)
-
-
-def main():
-    here = os.path.dirname(os.path.abspath(__file__))
-    levels = [level1(), level2(), level3()]
-    SOLID = set('#RB?')
-    for lv in levels:
-        rows = lv['rows']
-        assert all(len(r) == lv['width'] for r in rows), lv['name']
-        assert lv['rows'][0].count('P') <= 1
-        # the hero is 38px tall standing on row 14, so his head reaches into row 12.
-        # a solid tile floating at row 12 with nothing under it is an invisible wall.
-        for x in range(lv['width']):
-            if rows[12][x] in SOLID and rows[13][x] not in SOLID:
-                raise AssertionError('%s: floating row-12 solid at x=%d' % (lv['name'], x))
-    # ---- reachability gate: nothing in the level may be impossible to reach.
-    # The two builds differ by exactly a factor of two, so this check runs in
-    # tile units and covers both of them.
-    G, V, vRun = physics_from_template(os.path.join(here, '8bit', 'game8_template.html'))
-    rise_px = (V * V) / (2 * G) * 0.95        # measured in-game: 57 px vs an analytic 60
-    problems = 0
-    for lv in levels:
-        badp, bado, total, seen = reach_report(lv, rise_px, V, G, vRun)
-        print('  %-18s surfaces %d/%d reachable | unreachable orbs: %d'
-              % (lv['name'], seen, total, len(bado)))
-        if badp:
-            print('     UNREACHABLE PLATFORMS:', badp[:14])
-            problems += 1
-        if bado:
-            print('     UNREACHABLE ORBS:', bado[:14])
-            problems += 1
-    if problems:
-        raise AssertionError('level geometry has unreachable platforms or orbs')
-
-    body = 'const LEVELS = [\n' + ',\n'.join('  ' + js(lv) for lv in levels) + '\n];'
-    with open(os.path.join(here, 'game_template.html'), encoding='utf-8') as f:
-        tpl = f.read()
-    out = tpl.replace('/*%%LEVELS%%*/', body)
-    assert '%%LEVELS%%' not in out
-    with open(os.path.join(here, 'index.html'), 'w', encoding='utf-8') as f:
-        f.write(out)
-    print('levels:', [(lv['name'], lv['width']) for lv in levels])
-    print('wrote index.html', os.path.getsize(os.path.join(here, 'index.html')), 'bytes')
-
-
-if __name__ == '__main__':
-    main()
