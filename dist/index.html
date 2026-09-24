@@ -1022,10 +1022,22 @@ function drawRunMenu(y0){
   const rows = [ ['PLAY AGAIN', 'replay', C.c], ['CHANGE NAME', 'rename', C.w],
                  ['TITLE', 'title', C.g], ['HIGH SCORES', 'scores', C.g] ];
   const keys = ['SPACE', 'N', 'BACKSPACE', 'H'];
+  /* Two columns: key caps right aligned, actions left aligned, the pair centred as a
+     block so every key and every action line up no matter how long the words are. */
+  let kw = 0, aw = 0;
+  for(const k of keys) kw = Math.max(kw, textWidth(k));
+  for(const r of rows) aw = Math.max(aw, textWidth(r[0]));
+  const gap = 14, block = kw + gap + aw;
+  const kx = Math.round((W - block) / 2) + kw;          // right edge of the key column
+  const ax = kx + gap;                                  // left edge of the action column
   for(let i = 0; i < rows.length; i++){
-    const label = touchMode ? rows[i][0] : keys[i].padEnd(10) + rows[i][0];
     const y = y0 + i*13;
-    textCenter(ctx, label, y, rows[i][2]);
+    if(touchMode){
+      textCenter(ctx, rows[i][0], y, rows[i][2]);
+    } else {
+      drawText(ctx, keys[i], kx - textWidth(keys[i]), y, rows[i][2]);
+      drawText(ctx, rows[i][0], ax, y, rows[i][2]);
+    }
     menuCells.push({ y: y - 6, h: 12, a: rows[i][1] });
   }
 }
@@ -1033,25 +1045,33 @@ function menuHit(y){
   for(const c of menuCells) if(y >= c.y && y < c.y + c.h) return c.a;
   return null;
 }
+/* chunky pixel arrow, used for the pace selector */
+function arrow(g, cx, cy, dir, col){
+  g.fillStyle = col || C.w;
+  for(let i = 0; i < 5; i++){                       // head, 10px wide, 12px tall
+    const len = (5 - i) * 2;
+    g.fillRect(dir < 0 ? cx - len : cx, cy - 6 + i * 2, len, 2);
+    g.fillRect(dir < 0 ? cx - len : cx, cy + 4 - i * 2, len, 2);
+  }
+  g.fillRect(dir < 0 ? cx : cx - 6, cy - 2, 6, 4);  // shaft
+}
 /* options screen: pace preset only, so jump height never changes */
 function drawOptions(){
   const c = themes[0];
   ctx.fillStyle = c.sky; ctx.fillRect(0, 0, W, H);
   for(const st of stars){ px(ctx, st.x % W, st.y, 1, 1, st.c ? c.star2 : c.star); }
-  textCenter(ctx, 'OPTIONS', 20, C.Y, 2);
-  textCenter(ctx, 'PACE', 62, C.w);
+  textCenter(ctx, 'OPTIONS', 18, C.Y, 2);
+  textCenter(ctx, 'PACE', 58, C.w);
   optCells = [];
-  panel(16, 86, 62, 24);
-  textCenter(ctx, 'PREV', 94, C.w);
-  optCells.push({ x:16, y:86, w:62, h:24, a:'prev' });
-  panel(178, 86, 62, 24);
-  textCenter(ctx, 'NEXT', 94, C.w);
-  optCells.push({ x:178, y:86, w:62, h:24, a:'next' });
-  textCenter(ctx, SPEEDS[speedIdx].k, 92, C.c, 2);
-  textCenter(ctx, 'SLOWER IS EASIER TO PLAY', 140, C.g);
-  textCenter(ctx, 'JUMP HEIGHT IS THE SAME', 152, C.g);
-  textCenter(ctx, touchMode ? 'TAP PREV / NEXT' : 'ARROWS = CHANGE PACE', 176, C.w);
-  textCenter(ctx, touchMode ? 'TAP ELSEWHERE = BACK' : 'BACKSPACE = BACK', 200, C.g);
+  arrow(ctx, 70, 91, -1, C.w);
+  arrow(ctx, 186, 91, 1, C.w);
+  optCells.push({ x:44, y:72, w:48, h:40, a:'prev' });
+  optCells.push({ x:164, y:72, w:48, h:40, a:'next' });
+  textCenter(ctx, SPEEDS[speedIdx].k, 84, C.c, 2);
+  textCenter(ctx, 'SLOWER IS EASIER TO PLAY', 136, C.g);
+  textCenter(ctx, 'JUMP HEIGHT IS THE SAME', 148, C.g);
+  textCenter(ctx, 'BACK', 196, C.w);
+  textCenter(ctx, touchMode ? '(TAP ELSEWHERE)' : '(BACKSPACE)', 210, C.g);
 }
 function render(){
   ctx.setTransform(1,0,0,1,0,0);
