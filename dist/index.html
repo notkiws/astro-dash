@@ -1019,8 +1019,10 @@ function boardStatus(){
 }
 function drawRunMenu(y0){
   menuCells = [];
+  /* one distinct colour per row so the four lines never blur together:
+     cyan / white / gold / light green (all NES palette, all readable on black) */
   const rows = [ ['PLAY AGAIN', 'replay', C.c], ['CHANGE NAME', 'rename', C.w],
-                 ['TITLE', 'title', C.g], ['HIGH SCORES', 'scores', C.g] ];
+                 ['MAIN MENU', 'title', C.Y], ['HIGH SCORES', 'scores', C.e] ];
   const keys = ['SPACE', 'N', 'BACKSPACE', 'H'];
   /* Two columns: key caps right aligned, actions left aligned, the pair centred as a
      block so every key and every action line up no matter how long the words are. */
