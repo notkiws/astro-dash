@@ -71,7 +71,16 @@ dan adil untuk dilompati.
 
 ## Main di browser / hosting
 
-Repo: <https://github.com/notkiws/astro-dash> (publik, MIT-style bebas dipakai).
+Repo: <https://github.com/notkiws/astro-dash> (publik, bebas dipakai).
+Live: <https://astro-dash-notkiws.netlify.app/> dan <https://astro-dash-notkiws.netlify.app/8bit/>
+
+### Deploy ulang (Netlify site `astro-dash-notkiws`)
+
+    python3 build.py && cd 8bit && python3 build8.py && cd .. && python3 make_site.py
+    netlify deploy --prod --dir=dist --site astro-dash-notkiws
+
+Alternatif otomatis: di Netlify -> "Import an existing project" -> GitHub -> notkiws/astro-dash
+(publish dir `dist/` sudah diatur di netlify.toml, tiap push langsung ter-deploy).
 
 Struktur hasil deploy (folder `dist/`, statis — tidak perlu build di server):
 
