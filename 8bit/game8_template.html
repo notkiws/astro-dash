@@ -151,34 +151,36 @@ function flipSprite(src){
 }
 
 /* hero: 16x16 head+torso, animated 16x6 leg strips underneath */
+/* Pilot: bubble-helmeted courier bot, drawn for the Dlicom jam mascot theme.
+   Same 16x22 footprint as before, so the collision box and physics are untouched. */
 const HERO_BODY = [
-  '......cccc......',
-  '...cccssssccc...',
-  '...cssssssssc...',
-  '..cssssssssssc..',
-  '..csBBBBBBBBsc..',
-  '..csBwBBBBwBsc..',
-  '..csBkBBBBkBsc..',
-  '..csBBBBBBBBsc..',
-  '..cssBkkkkBssc..',
-  '...cssssssssc...',
-  '....ccBBBBcc....',
-  '...BBBBBBBBBB...',
-  '..BBBBBBwwBBB...',
-  '..BBBBBBwwBBB...',
-  '..bbbbbbbbbbbb..',
-  '.....BBBBBB.....'
+  '.....nnnnnn.....',
+  '...nnssssssnn...',
+  '..nsshhhhhhssn..',
+  '.nshhwwwwwwhhsn.',
+  '.nshwkkwwkkwhsn.',
+  '.nshwwwwwwwwhsn.',
+  '.nshwkwwwwkwhsn.',
+  '.nsoowkkkkwoosn.',
+  '..nssssssssssn..',
+  '....nnssssnn....',
+  '.....nnnnnn.....',
+  '...cccccccccc...',
+  '..ccccwwwwcccc..',
+  '..ccccwwwwcccc..',
+  '..BBccccccccBB..',
+  '...bbbbbbbbbb...'
 ];
 const HERO_LEGS = {
-  stand:['.....BB.BB......','.....BB.BB......','.....bB.bB......','....wwww.wwww...','....wwww.wwww...','................'],
-  run1 :['....BB...BB.....','...BB.....BB....','...bB......bB...','..wwww....wwww..','..wwww....wwww..','................'],
-  run2 :['......BBBB......','......BB.BB.....','......bB.bB.....','....wwww.wwww...','....wwww.wwww...','................'],
-  jump :['....BB...BB.....','...BB....BB.....','..bB.....bB.....','.wwww...wwww....','.wwww...wwww....','................']
+  stand:['.....cc.cc......','.....cc.cc......','.....cc.cc......','....wwww.wwww...','....wwww.wwww...','................'],
+  run1 :['....cc...cc.....','...cc.....cc....','...cc......cc...','..wwww....wwww..','..wwww....wwww..','................'],
+  run2 :['......cccc......','......cc.cc.....','......cc.cc.....','....wwww.wwww...','....wwww.wwww...','................'],
+  jump :['....cc...cc.....','...cc....cc.....','..cc.....cc.....','.wwww...wwww....','.wwww...wwww....','................']
 };
 function heroFrame(legs){
   const cv = document.createElement('canvas'); cv.width = 16; cv.height = 22;
   const g = cv.getContext('2d');
-  const cape = [['b',2,10,2,6],['b',12,10,2,6],['b',3,14,3,2],['b',10,14,3,2],['b',10,9,2,2],['b',4,9,2,2]];
+  const cape = [['B',1,11,2,6],['B',13,11,2,6],['B',2,16,3,2],['B',11,16,3,2]];
   for(const [col,x,y,w,h] of cape){ g.fillStyle = C[col]; g.fillRect(x,y,w,h); }
   g.drawImage(mkSprite(HERO_BODY), 0, 0);
   g.drawImage(mkSprite(HERO_LEGS[legs]), 0, 16);
