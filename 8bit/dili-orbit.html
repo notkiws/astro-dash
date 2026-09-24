@@ -885,7 +885,7 @@ function kbHit(x, y){
 }
 function nameKey(k){
   if(k === 'OK') confirmName();
-  else if(k === 'ESC') backToTitle();
+  else if(k === 'ESC' || k === 'BACK') backToTitle();
   else if(k === 'DEL') pilotName = pilotName.slice(0, -1);
   else if(pilotName.length < NAME_MAX) pilotName += k;
 }
@@ -913,11 +913,12 @@ function drawScores(){
   }
   textCenter(ctx, boardMode === 'global' ? 'GLOBAL BOARD' : 'THIS DEVICE ONLY',
              162, boardMode === 'global' ? C.c : C.o);
-  textCenter(ctx, touchMode ? 'TAP TO GO BACK' : 'BACKSPACE = BACK', 200, C.g);
+  textCenter(ctx, 'BACK', 196, C.w);
+  textCenter(ctx, touchMode ? '(TAP ANYWHERE)' : '(BACKSPACE)', 210, C.g);
 }
 function drawKeyboard(){
   kbCells = [];
-  const rows = ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', ['4','5','6','7','8','9','ESC','DEL','OK']];
+  const rows = ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', ['4','5','6','7','8','9','BACK','DEL','OK']];
   const cw = 24, chh = 21, y0 = 96;
   for(let r = 0; r < rows.length; r++){
     const items = Array.isArray(rows[r]) ? rows[r] : rows[r].split('');
@@ -925,7 +926,7 @@ function drawKeyboard(){
     for(let i = 0; i < items.length; i++){
       const x = sx + i*cw, y = y0 + r*chh, k = items[i];
       panel(x + 1, y + 1, cw - 2, chh - 2);
-      const col = k === 'OK' ? C.G : ((k === 'DEL' || k === 'ESC') ? C.o : C.w);
+      const col = k === 'OK' ? C.G : ((k === 'DEL' || k === 'BACK') ? C.o : C.w);
       const lbl = k === 'DEL' ? '<' : k;
       drawText(ctx, lbl, x + Math.round((cw - textWidth(lbl))/2), y + 7, col);
       kbCells.push({x:x, y:y, w:cw, h:chh, k:k});
@@ -945,11 +946,12 @@ function drawNameEntry(){
   drawText(ctx, txt, Math.round((W - textWidth(txt, 2))/2), 72, C.w, 2);
   if(touchMode){
     drawKeyboard();
-    textCenter(ctx, 'ESC = BACK   OK = START', 190, C.g);
+    textCenter(ctx, 'BACK = TITLE   OK = START', 190, C.g);
   } else {
     textCenter(ctx, 'A-Z  0-9  UP TO ' + NAME_MAX, 100, C.g);
     textCenter(ctx, 'ENTER = START', 112, C.w);
-    textCenter(ctx, 'BACKSPACE = DELETE   ESC = BACK', 122, C.g);
+    textCenter(ctx, 'BACKSPACE = DELETE', 122, C.g);
+    textCenter(ctx, '(EMPTY + BACKSPACE = BACK)', 134, C.g);
     if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, 'START TYPING', 150, C.c);
     ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 168);
   }
@@ -1101,7 +1103,11 @@ addEventListener('keydown', e=>{
   if(game.state === ST.NAME){                       // name entry swallows everything else
     if(e.key === 'Escape'){ backToTitle(); e.preventDefault(); return; }
     if(e.key === 'Enter' || e.key === ' '){ confirmName(); e.preventDefault(); return; }
-    if(e.key === 'Backspace'){ pilotName = pilotName.slice(0, -1); e.preventDefault(); return; }
+    if(e.key === 'Backspace'){
+      if(pilotName) pilotName = pilotName.slice(0, -1);
+      else backToTitle();                       // nothing left to delete: step back
+      e.preventDefault(); return;
+    }
     if(/^[A-Za-z0-9]$/.test(e.key)){ if(pilotName.length < NAME_MAX) pilotName += e.key.toUpperCase(); e.preventDefault(); return; }
     return;
   }
