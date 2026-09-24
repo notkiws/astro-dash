@@ -1,9 +1,13 @@
+# Netlify: the site is a plain static folder - no build step needed.
+# dist/ holds the assembled game: /  -> smooth build, /8bit/ -> 8-bit build.
 [build]
   publish = "dist"
-  command = "python3 build.py && cd 8bit && python3 build8.py && cd .. && python3 make_site.py"
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
+
+# To regenerate dist/ after editing a template:
+#   python3 build.py && cd 8bit && python3 build8.py && cd .. && python3 make_site.py
