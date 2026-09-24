@@ -16,9 +16,9 @@ def main():
         subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(shot),
                         "-vf", "scale=512:480:flags=neighbor,pad=1200:630:344:75:black,"
                                "drawbox=x=344:y=75:w=512:h=480:color=0x3cbcfc@0.7:t=2",
-                        str(DIST / "shot.png")], check=True)
+                        str(DIST / "card-v2.png")], check=True)
     # old /8bit/ links keep working
-    (DIST / "_redirects").write_text("/8bit/ /  301\n/8bit/* /  301\n", encoding="utf-8")
+    (DIST / "_redirects").write_text("/8bit/ /  301\n/8bit/* /  301\n/play  /index.html  200\n", encoding="utf-8")
     (DIST / "_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n", encoding="utf-8")
     for p in sorted(DIST.rglob("*")):
         if p.is_file(): print(f"  {p.relative_to(DIST)}  {p.stat().st_size} bytes")
