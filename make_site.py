@@ -10,11 +10,12 @@ def main():
     if DIST.exists(): shutil.rmtree(DIST)
     DIST.mkdir(parents=True)
     shutil.copy(ROOT / "8bit" / "dili-orbit.html", DIST / "index.html")
-    # share image for link previews (og:image), from the 8-bit title screen
-    shot = ROOT / "8bit" / "preview" / "title_v3.png"
+    # share image for link previews (og:image): 2x the NES screen, centred, crisp pixels
+    shot = ROOT / "8bit" / "preview" / "title.png"
     if shot.exists():
         subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(shot),
-                        "-vf", "scale=672:630:flags=neighbor,pad=1200:630:(ow-iw)/2:0:black",
+                        "-vf", "scale=512:480:flags=neighbor,pad=1200:630:344:75:black,"
+                               "drawbox=x=344:y=75:w=512:h=480:color=0x3cbcfc@0.7:t=2",
                         str(DIST / "shot.png")], check=True)
     # old /8bit/ links keep working
     (DIST / "_redirects").write_text("/8bit/ /  301\n/8bit/* /  301\n", encoding="utf-8")
