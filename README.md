@@ -68,3 +68,24 @@ dan adil untuk dilompati.
 
 - `astro_dash_gameplay.mp4` — rekaman gameplay singkat (sektor 1)
 - `title.png`, `sector3.png`, `hero_sheet.png`, `lv1_play.png`, `lv2_play.png`, `lv3_play.png`
+
+## Main di browser / hosting
+
+Repo: <https://github.com/notkiws/astro-dash> (publik, MIT-style bebas dipakai).
+
+Struktur hasil deploy (folder `dist/`, statis — tidak perlu build di server):
+
+- `/` -> versi smooth (32 px) `index.html`
+- `/8bit/` -> versi 8-bit `astro-dash-8bit.html`
+- `dist/_headers` -> header keamanan dasar; publish dir diatur di `netlify.toml`
+
+Membuat ulang paket deploy setelah mengubah template:
+
+    python3 build.py && cd 8bit && python3 build8.py && cd .. && python3 make_site.py
+
+### Reset papan skor
+
+Skor disimpan di `localStorage` per browser dengan key
+`astroDash.scores.v2` (smooth) dan `astroDash8.scores.v2` (8-bit).
+Untuk mereset papan skor semua pemain saat rilis baru, naikkan versi key
+(mis. `v2` -> `v3`); key lama otomatis dibersihkan saat game dibuka.
