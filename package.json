@@ -1,0 +1,9 @@
+{
+  "name": "dili-orbit",
+  "private": true,
+  "version": "1.0.0",
+  "description": "DILI ORBIT - NES style browser platformer (static site + one function for the shared leaderboard)",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

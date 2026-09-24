@@ -217,3 +217,23 @@ Perbaikan:
   fullscreen bisa kembali dengan satu tombol (tidak ditulis di layar, hanya di README).
 - Handler yang menangani `Esc`/`Backspace` sekarang memanggil `preventDefault()` +
   `stopPropagation()` supaya browser tidak ikut bereaksi (sebatas yang diizinkan browser).
+
+
+## 16. Revisi pemain: papan skor bersama, kecepatan, dan menu ulang
+
+Tiga permintaan pemain yang masuk setelah rilis pertama, dan keputusan teknisnya:
+
+1. **Papan skor tidak ter-update untuk pemain lain.** Ini benar: papan lama disimpan di
+   `localStorage`, jadi per perangkat. Sekarang skor dikirim ke fungsi milik situs sendiri
+   (`/api/scores`, Netlify Blobs), satu baris per nama seperti sebelumnya. Kalau fungsi tidak
+   terjangkau, game tetap jalan dengan papan perangkat dan memberi keterangan di halaman skor.
+2. **Kecepatan bisa diatur.** Hanya kecepatan horizontal yang diskalakan, supaya tinggi lompatan
+   (dan seluruh geometri level) tidak berubah. Batas bawah diukur lewat validator: 0,85x sudah
+   membuat platform di sektor 1 kolom 100 baris 8 dan sektor 3 kolom 84 baris 9 mustahil, jadi
+   SLOW dipatok 0,90x. Validator sekarang dijalankan untuk setiap pace saat build.
+3. **Setelah selesai, pemain boleh pakai nama lama atau ganti.** Layar GAME OVER dan MISSION
+   COMPLETE jadi menu: `Space` main lagi dengan nama yang sama, `N` ganti nama (kolom nama
+   terisi otomatis), `Backspace` ke layar judul, `H` papan skor, dan barisnya bisa ditap di HP.
+
+Catatan desain: tombol `N` dan `Backspace` hanya hidup di layar akhir permainan dan ditulis di
+layar, jadi aturan lama "hanya `Space` yang memajukan layar" tetap berlaku untuk layar lain.

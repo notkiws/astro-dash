@@ -12,7 +12,10 @@ def main():
     shutil.copy(ROOT / "8bit" / "dili-orbit.html", DIST / "index.html")
     # share image for link previews (og:image): 2x the NES screen, centred, crisp pixels
     shot = ROOT / "8bit" / "preview" / "title.png"
-    if shot.exists():
+    fallback = ROOT / "8bit" / "preview" / "card.png"
+    if fallback.exists():
+        shutil.copy(fallback, DIST / "card-v2.png")
+    if shot.exists() and shutil.which("ffmpeg"):
         subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(shot),
                         "-vf", "scale=512:480:flags=neighbor,pad=1200:630:344:75:black,"
                                "drawbox=x=344:y=75:w=512:h=480:color=0x3cbcfc@0.7:t=2",

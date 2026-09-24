@@ -4,8 +4,20 @@
   publish = "dist"
   command = "cd 8bit && python3 build8.py && cd .. && python3 make_site.py"
 
+[functions]
+  directory = "netlify/functions"
+
 [[headers]]
   for = "/*"
   [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+# The board must never be served from a cache: the game reads it right after a run
+# and a stale answer looks like "my score did not save".
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0, must-revalidate"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"

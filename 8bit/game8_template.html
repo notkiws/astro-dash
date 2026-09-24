@@ -53,10 +53,23 @@
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const W = 256, H = 240, T = 16;
-const ST = { TITLE:0, CARD:1, PLAY:2, PAUSE:3, CLEAR:4, DEAD:5, OVER:6, WIN:7, NAME:8, SCORES:9 };
+const ST = { TITLE:0, CARD:1, PLAY:2, PAUSE:3, CLEAR:4, DEAD:5, OVER:6, WIN:7, NAME:8, SCORES:9, OPTIONS:10 };
 
 const PHYS = { G:0.31, JUMP:-6.7, MAXFALL:7.6, ACC:0.42, FRIC:0.80, AIR:0.94,
                MAXRUN:2.35, MAXSPRINT:3.3, COYOTE:7, BUFFER:7 };
+
+/* Pace presets. Only the horizontal speed changes, so jump height is identical at
+   every setting and no platform stops being reachable vertically. The build script
+   re-runs the level reachability check for each preset and fails if one breaks. */
+/* SLOW is 0.90, not lower: build8.py proves that every slower value leaves the
+   platform at ORBITAL x=100 row 8 and ALIEN x=84 row 9 out of reach. */
+const SPEEDS = [ { k:'SLOW', m:0.90 }, { k:'NORMAL', m:1.0 }, { k:'FAST', m:1.2 } ];
+const SPEED_KEY = 'diliOrbit.speed.v1';
+let speedIdx = (()=>{ try{ const v = parseInt(localStorage.getItem(SPEED_KEY), 10);
+  return (v >= 0 && v < SPEEDS.length) ? v : 1; }catch(err){ return 1; } })();
+function speedMul(){ return SPEEDS[speedIdx].m; }
+function setSpeed(i){ speedIdx = ((i % SPEEDS.length) + SPEEDS.length) % SPEEDS.length;
+  try{ localStorage.setItem(SPEED_KEY, String(speedIdx)); }catch(err){} }
 
 /* ------------------------------ palette ------------------------------ */
 const C = { k:'#000000', w:'#fcfcfc', l:'#e4e4e4', g:'#bcbcbc', d:'#7c7c7c',
@@ -541,9 +554,10 @@ function step(){
 }
 function updatePlay(){
   const p = player;
-  const maxSpd = keys.sprint ? PHYS.MAXSPRINT : PHYS.MAXRUN;
-  if(keys.left && !keys.right){ p.vx -= PHYS.ACC; p.face = -1; }
-  else if(keys.right && !keys.left){ p.vx += PHYS.ACC; p.face = 1; }
+  const SM = speedMul();
+  const maxSpd = (keys.sprint ? PHYS.MAXSPRINT : PHYS.MAXRUN) * SM;
+  if(keys.left && !keys.right){ p.vx -= PHYS.ACC*SM; p.face = -1; }
+  else if(keys.right && !keys.left){ p.vx += PHYS.ACC*SM; p.face = 1; }
   else { p.vx *= p.onGround ? PHYS.FRIC : PHYS.AIR; if(Math.abs(p.vx) < 0.03) p.vx = 0; }
   p.vx = clamp(p.vx, -maxSpd, maxSpd);
 
@@ -773,6 +787,14 @@ function dedupeScores(list){
   }
   return Array.from(best.values()).sort((a, b) => b.s - a.s).slice(0, 10);
 }
+/* The board lives on the server (netlify/functions/scores.mjs). If it cannot be
+   reached (offline, or the file opened straight from disk) the game keeps working
+   with this device's saved board and says so on the score page. */
+const API_SCORES = '/api/scores';
+let boardMode = 'local', boardError = '';
+function setBoard(list){
+  scores = dedupeScores((list || []).filter(e => e && typeof e.s === 'number' && typeof e.n === 'string'));
+}
 function loadScores(){
   try{
     const raw = localStorage.getItem(LB_KEY);
@@ -788,29 +810,71 @@ try{ for(const k of ['astroDash8.scores.v1','astroDash8.scores.v2','astroDash8.p
 let scores = loadScores();
 let pilotName = (()=>{ try{ return (localStorage.getItem(LB_PILOT) || '').slice(0, NAME_MAX); }catch(err){ return ''; } })();
 function rememberPilot(n){ try{ localStorage.setItem(LB_PILOT, n); }catch(err){} }
-function submitScore(name, score){
+function submitScoreLocal(name, score, level){
   const n = (name || 'PILOT').slice(0, NAME_MAX);
   if(!(score > 0)) return { rank:0, improved:false };
-  const prev = scores.find(e => e.n === n);
+  const prev = loadScores().find(e => e.n === n);
   const improved = !prev || (score|0) > prev.s;
-  scores = dedupeScores(scores.concat([{ n:n, s:score|0, k:(game.levelIndex + 1) }]));
-  saveScores(scores);
-  const i = scores.findIndex(e => e.n === n);
+  const merged = dedupeScores(loadScores().concat([{ n:n, s:score|0, k:level }]));
+  saveScores(merged);
+  const i = merged.findIndex(e => e.n === n);
   return { rank: i >= 0 ? i + 1 : 0, improved: improved };
+}
+async function fetchBoard(){
+  try{
+    const ctl = new AbortController();
+    const to = setTimeout(()=>ctl.abort(), 6000);
+    const r = await fetch(API_SCORES + '?t=' + Date.now(), { signal: ctl.signal, cache: 'no-store', headers: { accept: 'application/json' } });
+    clearTimeout(to);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if(!j || !Array.isArray(j.board)) throw new Error('bad reply');
+    setBoard(j.board); boardMode = 'global'; boardError = '';
+  }catch(err){
+    boardMode = 'local'; boardError = String((err && err.message) || err);
+    setBoard(loadScores());
+  }
+  return scores;
+}
+async function submitScore(name, score, level){
+  const local = submitScoreLocal(name, score, level);      // always keep a local copy
+  try{
+    const r = await fetch(API_SCORES + '?t=' + Date.now(), { method: 'POST', cache: 'no-store', headers: { 'content-type': 'application/json' },
+                                        body: JSON.stringify({ name: name, score: score|0, level: level }) });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if(!j || !Array.isArray(j.board)) throw new Error('bad reply');
+    setBoard(j.board); boardMode = 'global'; boardError = '';
+    const i = scores.findIndex(e => e.n === (name || 'PILOT').slice(0, NAME_MAX));
+    return { rank: i >= 0 ? i + 1 : local.rank, improved: local.improved, shared: true };
+  }catch(err){
+    boardMode = 'local'; boardError = String((err && err.message) || err);
+    setBoard(loadScores());
+    return { rank: local.rank, improved: local.improved, shared: false };
+  }
 }
 function finishRun(){
   if(game.submitted) return;
   game.submitted = true;
-  const r = submitScore(game.name, game.score);
-  game.rank = r.rank; game.improved = r.improved;
+  const n = game.name, sc = game.score, lv = game.levelIndex + 1;
+  const local = submitScoreLocal(n, sc, lv);
+  game.rank = local.rank; game.improved = local.improved; game.shared = false;
+  if(!(sc > 0)){ game.pending = false; return; }
+  game.pending = true;
+  submitScore(n, sc, lv).then(r => {
+    if(r.rank) game.rank = r.rank;
+    game.shared = r.shared; game.pending = false;
+  });
 }
+function playAgain(){ startGame(); }                       // same pilot, fresh run
+function changeName(){ pilotName = game.name; game.state = ST.NAME; game.lastAdv = game.t; }
 function confirmName(){
   const n = (pilotName || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, NAME_MAX);
   game.name = n || 'PILOT';
   rememberPilot(game.name);
   startGame();
 }
-let kbCells = [];
+let kbCells = [], optCells = [], menuCells = [];
 function kbHit(x, y){
   for(const c of kbCells) if(x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h) return c.k;
   return null;
@@ -843,6 +907,8 @@ function drawScores(){
       textCenter(ctx, row, 52 + i*10, col);
     }
   }
+  textCenter(ctx, boardMode === 'global' ? 'GLOBAL BOARD' : 'THIS DEVICE ONLY',
+             162, boardMode === 'global' ? C.c : C.o);
   textCenter(ctx, touchMode ? 'TAP TO GO BACK' : 'BACKSPACE = BACK', 200, C.g);
 }
 function drawKeyboard(){
@@ -895,7 +961,7 @@ function drawTitle(){
   if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, touchMode ? 'TAP TO START' : 'PRESS SPACE', 134, C.w);
   textCenter(ctx, 'MOVE: A/D OR ARROWS', 164, C.g);
   textCenter(ctx, 'JUMP: SPACE   RUN: SHIFT', 176, C.g);
-  textCenter(ctx, 'P PAUSE   M MUTE   V CRT', 188, C.g);
+  textCenter(ctx, 'P PAUSE  M MUTE  V CRT  O OPTIONS', 188, C.g);
   textCenter(ctx, touchMode ? 'TAP HERE: HIGH SCORES' : 'H HIGH SCORES', 200, C.g);
 }
 function drawOverlay(){
@@ -919,27 +985,69 @@ function drawOverlay(){
     textCenter(ctx, 'LIVES LEFT X' + Math.max(0, game.hearts), 132, C.g);
   } else if(game.state === ST.OVER){
     ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, W, H);
-    textCenter(ctx, 'GAME OVER', 84, C.r, 2);
-    textCenter(ctx, 'ORB ' + String(game.score).padStart(6,'0'), 112, C.Y);
+    textCenter(ctx, 'GAME OVER', 62, C.r, 2);
+    textCenter(ctx, 'ORB ' + String(game.score).padStart(6,'0'), 88, C.Y);
     if(game.rank > 0){
-      textCenter(ctx, (game.improved ? 'NEW HIGH SCORE  RANK ' : 'YOUR BEST  RANK ') + game.rank, 134, C.c);
-      textCenter(ctx, String(game.name).slice(0, NAME_MAX), 146, C.g);
+      textCenter(ctx, (game.improved ? 'NEW HIGH SCORE  RANK ' : 'YOUR BEST  RANK ') + game.rank, 106, C.c);
+      textCenter(ctx, String(game.name).slice(0, NAME_MAX), 118, C.g);
     } else {
-      textCenter(ctx, 'NOT IN THE TOP 10', 134, C.g);
+      textCenter(ctx, 'NOT IN THE TOP 10', 106, C.g);
     }
-    textCenter(ctx, 'H = HIGH SCORES', 186, C.g);
-    if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, 'PRESS SPACE', 168, C.w);
+    drawRunMenu(142);
+    textCenter(ctx, boardStatus(), 212, boardMode === 'global' ? C.g : C.o);
   } else if(game.state === ST.WIN){
     ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, W, H);
-    textCenter(ctx, 'MISSION COMPLETE', 60, C.c, 2);
-    textCenter(ctx, 'YOU CLEARED', 92, C.w);
-    textCenter(ctx, 'ALL 3 DEEP SPACE SECTORS', 104, C.w);
-    ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 120);
-    textCenter(ctx, 'FINAL SCORE ' + String(game.score).padStart(6,'0'), 150, C.Y);
-    if(game.rank > 0) textCenter(ctx, (game.improved ? 'NEW HIGH SCORE  RANK ' : 'YOUR BEST  RANK ') + game.rank, 168, C.c);
-    textCenter(ctx, 'H = HIGH SCORES', 206, C.g);
-    if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, 'PRESS SPACE', 190, C.w);
+    textCenter(ctx, 'MISSION COMPLETE', 44, C.c, 2);
+    textCenter(ctx, 'YOU CLEARED', 72, C.w);
+    textCenter(ctx, 'ALL 3 DEEP SPACE SECTORS', 84, C.w);
+    ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 96);
+    textCenter(ctx, 'FINAL SCORE ' + String(game.score).padStart(6,'0'), 126, C.Y);
+    if(game.rank > 0) textCenter(ctx, (game.improved ? 'NEW HIGH SCORE  RANK ' : 'YOUR BEST  RANK ') + game.rank, 140, C.c);
+    drawRunMenu(156);
+    textCenter(ctx, boardStatus(), 212, boardMode === 'global' ? C.g : C.o);
   }
+}
+/* menu shown after a run: replay with the same pilot, or change the name */
+function boardStatus(){
+  if(game.pending) return 'SAVING TO THE GLOBAL BOARD';
+  if(boardMode === 'global') return 'SCORE SHARED WITH EVERYONE';
+  return 'BOARD OFFLINE: NOT SHARED';
+}
+function drawRunMenu(y0){
+  menuCells = [];
+  const rows = [ ['PLAY AGAIN', 'replay', C.c], ['CHANGE NAME', 'rename', C.w],
+                 ['TITLE', 'title', C.g], ['HIGH SCORES', 'scores', C.g] ];
+  const keys = ['SPACE', 'N', 'BACKSPACE', 'H'];
+  for(let i = 0; i < rows.length; i++){
+    const label = touchMode ? rows[i][0] : keys[i].padEnd(10) + rows[i][0];
+    const y = y0 + i*13;
+    textCenter(ctx, label, y, rows[i][2]);
+    menuCells.push({ y: y - 6, h: 12, a: rows[i][1] });
+  }
+}
+function menuHit(y){
+  for(const c of menuCells) if(y >= c.y && y < c.y + c.h) return c.a;
+  return null;
+}
+/* options screen: pace preset only, so jump height never changes */
+function drawOptions(){
+  const c = themes[0];
+  ctx.fillStyle = c.sky; ctx.fillRect(0, 0, W, H);
+  for(const st of stars){ px(ctx, st.x % W, st.y, 1, 1, st.c ? c.star2 : c.star); }
+  textCenter(ctx, 'OPTIONS', 20, C.Y, 2);
+  textCenter(ctx, 'PACE', 62, C.w);
+  optCells = [];
+  panel(16, 86, 62, 24);
+  textCenter(ctx, 'PREV', 94, C.w);
+  optCells.push({ x:16, y:86, w:62, h:24, a:'prev' });
+  panel(178, 86, 62, 24);
+  textCenter(ctx, 'NEXT', 94, C.w);
+  optCells.push({ x:178, y:86, w:62, h:24, a:'next' });
+  textCenter(ctx, SPEEDS[speedIdx].k, 92, C.c, 2);
+  textCenter(ctx, 'SLOWER IS EASIER TO PLAY', 140, C.g);
+  textCenter(ctx, 'JUMP HEIGHT IS THE SAME', 152, C.g);
+  textCenter(ctx, touchMode ? 'TAP PREV / NEXT' : 'ARROWS = CHANGE PACE', 176, C.w);
+  textCenter(ctx, touchMode ? 'TAP ELSEWHERE = BACK' : 'BACKSPACE = BACK', 200, C.g);
 }
 function render(){
   ctx.setTransform(1,0,0,1,0,0);
@@ -947,6 +1055,7 @@ function render(){
   if(game.state === ST.TITLE){ drawTitle(); return; }
   if(game.state === ST.NAME){ drawNameEntry(); return; }
   if(game.state === ST.SCORES){ drawScores(); return; }
+  if(game.state === ST.OPTIONS){ drawOptions(); return; }
   ctx.save();
   if(shake > 0.4) ctx.translate(Math.round((Math.random()-0.5)*shake), Math.round((Math.random()-0.5)*shake));
   drawSky();
@@ -975,6 +1084,8 @@ addEventListener('keydown', e=>{
     e.preventDefault(); e.stopPropagation(); closeScores(); return;
   }
   if(e.code === 'KeyH' && (game.state === ST.TITLE || game.state === ST.OVER || game.state === ST.WIN)){ openScores(); return; }
+  if((game.state === ST.OVER || game.state === ST.WIN) && e.code === 'KeyN'){ changeName(); return; }
+  if((game.state === ST.OVER || game.state === ST.WIN) && e.code === 'Backspace'){ game.state = ST.TITLE; return; }
   if(e.code === 'KeyF'){
     e.preventDefault();
     if(document.fullscreenElement) document.exitFullscreen();
@@ -984,6 +1095,13 @@ addEventListener('keydown', e=>{
   if(e.code === 'KeyP' || e.code === 'Escape'){ e.preventDefault(); togglePause(); return; }
   if(e.code === 'KeyV'){ const c = document.getElementById('crt'); c.style.display = c.style.display === 'block' ? 'none' : 'block'; return; }
   if(e.code === 'KeyR'){ if(game.state === ST.PLAY) toCard(); return; }
+  if(e.code === 'KeyO' && (game.state === ST.TITLE || game.state === ST.OVER || game.state === ST.WIN)){ game.state = ST.OPTIONS; return; }
+  if(game.state === ST.OPTIONS){
+    if(e.code === 'ArrowLeft' || e.code === 'KeyA'){ setSpeed(speedIdx - 1); e.preventDefault(); return; }
+    if(e.code === 'ArrowRight' || e.code === 'KeyD'){ setSpeed(speedIdx + 1); e.preventDefault(); return; }
+    if(e.code === 'Backspace' || e.code === 'Escape' || e.code === 'Space' || e.code === 'KeyH'){ game.state = ST.TITLE; e.preventDefault(); return; }
+    return;
+  }
   const k = KEYMAP[e.code];
   if(!k) return;
   e.preventDefault(); unlockAudio();
@@ -991,6 +1109,7 @@ addEventListener('keydown', e=>{
   keys[k] = true;
   if(game.state === ST.TITLE){ if(e.code === 'Space') game.state = ST.NAME; return; }
   else if(game.state === ST.SCORES && e.code === 'Space') closeScores();
+  else if((game.state === ST.OVER || game.state === ST.WIN) && e.code === 'Space') playAgain();
   else if(game.state !== ST.PLAY && e.code === 'Space') advance();
 });
 addEventListener('keyup', e=>{
@@ -1006,6 +1125,8 @@ touchUI.querySelectorAll('.btn').forEach(b=>{
     if(game.state === ST.TITLE) game.state = ST.NAME;
     else if(game.state === ST.NAME && k === 'jump') confirmName();
     else if(game.state === ST.SCORES && k === 'jump') closeScores();
+    else if((game.state === ST.OVER || game.state === ST.WIN) && k === 'jump') playAgain();
+    else if(game.state === ST.OPTIONS && k === 'jump') game.state = ST.TITLE;
     else if(game.state !== ST.PLAY && k === 'jump') advance(); };
   const off = ev=>{ ev.preventDefault(); keys[k] = false; };
   b.addEventListener('touchstart', on, {passive:false});
@@ -1019,11 +1140,31 @@ canvas.addEventListener('pointerdown', ev=>{
     if(touchMode){
       const r0 = canvas.getBoundingClientRect();
       const ty = (ev.clientY - r0.top) * (H / r0.height);
-      if(ty >= 194 && ty <= 214) openScores(ST.TITLE); else game.state = ST.NAME;   // score band or start
+      if(ty >= 180 && ty <= 194) game.state = ST.OPTIONS;                 // options row
+      else if(ty >= 194 && ty <= 214) openScores(ST.TITLE);               // score row
+      else game.state = ST.NAME;
     }
     return;
   }
+  if(game.state === ST.OPTIONS){
+    const ro = canvas.getBoundingClientRect();
+    const tx = (ev.clientX - ro.left) * (W / ro.width), ty = (ev.clientY - ro.top) * (H / ro.height);
+    for(const c of optCells){
+      if(tx >= c.x && tx < c.x + c.w && ty >= c.y && ty < c.y + c.h){ setSpeed(speedIdx + (c.a === 'next' ? 1 : -1)); return; }
+    }
+    game.state = ST.TITLE; return;                                       // tap anywhere else: back
+  }
   if(game.state === ST.SCORES){ if(touchMode) closeScores(); return; }
+  if(game.state === ST.OVER || game.state === ST.WIN){
+    const rm = canvas.getBoundingClientRect();
+    const ty = (ev.clientY - rm.top) * (H / rm.height);
+    const a = menuHit(ty);
+    if(a === 'replay') playAgain();
+    else if(a === 'rename') changeName();
+    else if(a === 'title') game.state = ST.TITLE;
+    else if(a === 'scores') openScores();
+    return;
+  }
   if(game.state === ST.NAME){
     const r = canvas.getBoundingClientRect();
     const k = kbHit((ev.clientX - r.left) * (W / r.width), (ev.clientY - r.top) * (H / r.height));
@@ -1047,6 +1188,7 @@ function frame(now){
 initSky(1);
 loadLevel(0);
 game.state = ST.TITLE;
+fetchBoard();                                   // shared board, falls back to this device
 requestAnimationFrame(frame);
 
 /* test / tooling hooks */
@@ -1081,6 +1223,9 @@ window.__dili = window.__astro = {
     });
     return cv.toDataURL('image/png');
   },
+  get speed(){ return SPEEDS[speedIdx].k; }, get speedIdx(){ return speedIdx; }, setSpeed,
+  get boardMode(){ return boardMode; }, get boardError(){ return boardError; }, fetchBoard,
+  playAgain, changeName, SPEEDS,
   get artErrors(){ return window.__artErrors; },
   get textOverflow(){ return window.__textOverflow; }
 };

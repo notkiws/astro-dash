@@ -3,6 +3,7 @@
 8-bit (256x240 / NES-style) template. Self-contained: everything it needs is in
 this folder (levels.py + game8_template.html)."""
 import os
+import re
 import levels as L
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -36,22 +37,35 @@ def main():
     for lv in levels:
         check_geometry(lv, SOLID)
 
-    # ---- reachability gate: nothing in the level may be impossible to reach ----
+    # ---- reachability gate, run for EVERY pace preset the game offers ----
+    # the multipliers are read out of the template, so the build can never validate a
+    # different set of speeds than the one that ships
+    with open(os.path.join(HERE, 'game8_template.html'), encoding='utf-8') as f:
+        tpl_text = f.read()
+    m = re.search(r"const SPEEDS = \[(.*?)\];", tpl_text, re.S)
+    assert m, 'SPEEDS not found in the template'
+    presets = [(k, float(v)) for k, v in re.findall(r"k:\s*'([A-Z]+)',\s*m:\s*([0-9.]+)", m.group(1))]
+    assert presets, 'no pace presets could be parsed'
+    print('  pace presets from the template:', presets)
+
     G, V, vRun = L.physics_from_template(os.path.join(HERE, 'game8_template.html'))
     rise_px = (V * V) / (2 * G) * 0.95        # measured in-game, slightly below the analytic value
-    problems = 0
-    for lv in levels:
-        badp, bado, total, seen = L.reach_report(lv, rise_px, V, G, vRun)
-        print('  %-18s surfaces %d/%d reachable | unreachable orbs: %d'
-              % (lv['name'], seen, total, len(bado)))
-        if badp:
-            print('     UNREACHABLE PLATFORMS:', badp[:14])
-            problems += 1
-        if bado:
-            print('     UNREACHABLE ORBS:', bado[:14])
-            problems += 1
-    if problems:
-        raise AssertionError('level geometry has unreachable platforms or orbs')
+    for label, mul in presets:
+        problems = 0
+        for lv in levels:
+            # extra 0.95 margin: a player may leave the edge below top speed
+            badp, bado, total, seen = L.reach_report(lv, rise_px, V, G, vRun * mul * 0.95)
+            print('  %-6s %-18s surfaces %d/%d reachable | unreachable orbs: %d'
+                  % (label, lv['name'], seen, total, len(bado)))
+            if badp:
+                print('     UNREACHABLE PLATFORMS:', badp[:14])
+                problems += 1
+            if bado:
+                print('     UNREACHABLE ORBS:', bado[:14])
+                problems += 1
+        if problems:
+            raise AssertionError('pace preset %s leaves level geometry unreachable' % label)
+    print()
 
     body = 'const LEVELS = [\n' + ',\n'.join('  ' + L.js(lv) for lv in levels) + '\n];'
     with open(os.path.join(HERE, 'game8_template.html'), encoding='utf-8') as f:
