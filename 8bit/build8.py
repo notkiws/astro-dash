@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build astro-dash-8bit.html: generate the tile levels and inject them into the
+"""Build dili-orbit.html: generate the tile levels and inject them into the
 8-bit (256x240 / NES-style) template. Self-contained: everything it needs is in
 this folder (levels.py + game8_template.html)."""
 import os
@@ -58,7 +58,7 @@ def main():
         tpl = f.read()
     out = tpl.replace('/*%%LEVELS%%*/', body)
     assert '%%LEVELS%%' not in out
-    target = os.path.join(HERE, 'astro-dash-8bit.html')
+    target = os.path.join(HERE, 'dili-orbit.html')
     with open(target, 'w', encoding='utf-8') as f:
         f.write(out)
     print('sectors:', [(lv['name'], lv['width']) for lv in levels])

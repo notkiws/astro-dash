@@ -1,6 +1,6 @@
-# ASTRO DASH 8-BIT — konsep game
+# DILI ORBIT — konsep game
 
-Versi 8-bit / gaya NES dari ASTRO DASH. Semua batasan diambil dari hardware asli
+Versi 8-bit / gaya NES dari DILI ORBIT. Semua batasan diambil dari hardware asli
 (Nintendo Entertainment System) supaya terasa otentik, bukan sekadar filter pixel.
 
 ## 1. Spesifikasi teknis ala NES
@@ -77,7 +77,7 @@ Aturan geometri yang **divalidasi otomatis saat build**:
   deretan 3 hati piksel + label `LIVES` di baris kedua (hati di kartu sektor dihitung tepat di tengah layar 256 px).
 - **Kartu sektor**, **PAUSED**, **SECTOR CLEAR**, **NO LIVES LEFT**, **GAME OVER**,
   **MISSION COMPLETE** — semua digambar dengan font bitmap, tanpa transparansi.
-- Judul: `ASTRO / DASH / 8-BIT EDITION`, `1 PLAYER`, prompt `PRESS SPACE` berkedip.
+- Judul: `DILI / ORBIT` (dua baris logo), prompt `PRESS SPACE` berkedip.
 
 ## 7. Audio chiptune
 
@@ -114,10 +114,10 @@ Kontrol: `A/D` atau panah kiri-kanan jalan, `Space`/`W`/`↑` lompat, `Shift` la
 - `8bit/game8_template.html` — seluruh mesin: palet `C`, font `FONT`, sprite `RAW`/`HERO_BODY`,
   tile `buildTiles()`, musik `SONG`.
 - `8bit/build8.py` — menyusun level (memakai generator di `../build.py` yang sama),
-  memvalidasi geometri, lalu menulis `astro-dash-8bit.html`.
+  memvalidasi geometri, lalu menulis `dili-orbit.html`.
 
 ```
-python3 build8.py     # hasil: astro-dash-8bit.html (satu file, bisa dibuka langsung)
+python3 build8.py     # hasil: dili-orbit.html (satu file, bisa dibuka langsung)
 ```
 
 ## 10. Status verifikasi

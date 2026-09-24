@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble the Netlify publish folder (dist/) - ASTRO DASH 8-BIT only."""
+"""Assemble the Netlify publish folder (dist/) - DILI ORBIT only."""
 import shutil, subprocess, pathlib
 
 ROOT = pathlib.Path(__file__).parent
@@ -9,7 +9,7 @@ DIST = ROOT / "dist"
 def main():
     if DIST.exists(): shutil.rmtree(DIST)
     DIST.mkdir(parents=True)
-    shutil.copy(ROOT / "8bit" / "astro-dash-8bit.html", DIST / "index.html")
+    shutil.copy(ROOT / "8bit" / "dili-orbit.html", DIST / "index.html")
     # share image for link previews (og:image), from the 8-bit title screen
     shot = ROOT / "8bit" / "preview" / "title_v3.png"
     if shot.exists():

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Level generator and physics checks for ASTRO DASH 8-BIT.
+"""Level generator and physics checks for DILI ORBIT.
 
 Produces the three tile maps (Grid + level1..level3) and validates them against the
 jump arc read straight out of game8_template.html, so a level can never ask for a

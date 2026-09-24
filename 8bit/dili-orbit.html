@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>ASTRO DASH 8-BIT - NES Style Platformer</title>
-<meta name="description" content="ASTRO DASH 8-BIT: a free browser platformer rendered at real NES resolution (256x240). Three deep space sectors, one blue astronaut robot. No install, works offline." />
+<title>DILI ORBIT - NES Style Space Platformer</title>
+<meta name="description" content="DILI ORBIT: a free browser platformer rendered at real NES resolution (256x240). Three deep space sectors, one blue astronaut robot. No install, works offline." />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="ASTRO DASH 8-BIT - NES Style Platformer" />
+<meta property="og:title" content="DILI ORBIT - NES Style Space Platformer" />
 <meta property="og:description" content="A free browser platformer at true NES resolution (256x240). Three deep space sectors, one blue astronaut robot." />
-<meta property="og:image" content="https://astrodash8.netlify.app/shot.png" />
+<meta property="og:image" content="https://diliorbit.netlify.app/shot.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -48,7 +48,7 @@ const LEVELS = [
 ];
 
 /* =====================================================================
-   ASTRO DASH 8-BIT
+   DILI ORBIT (8-bit NES build)
    256x240 (NES), 16x16 metatiles, NES palette, bitmap font, chiptune.
    ===================================================================== */
 const canvas = document.getElementById('c');
@@ -762,8 +762,8 @@ function panel(x, y, w, h){
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 }
 /* ------------------------------ leaderboard ------------------------------ */
-const LB_KEY = 'astroDash8.scores.v2';
-const LB_PILOT = 'astroDash8.pilot.v2';
+const LB_KEY = 'diliOrbit.scores.v1';
+const LB_PILOT = 'diliOrbit.pilot.v1';
 const NAME_MAX = 8;
 function dedupeScores(list){
   // the same name is the same player: keep only their highest score
@@ -785,7 +785,7 @@ function loadScores(){
 function saveScores(list){
   try{ localStorage.setItem(LB_KEY, JSON.stringify(list.slice(0, 10))); }catch(err){}
 }
-try{ localStorage.removeItem('astroDash8.scores.v1'); localStorage.removeItem('astroDash8.pilot.v1'); }catch(err){}   // launch reset: drop pre-release saves
+try{ for(const k of ['astroDash8.scores.v1','astroDash8.scores.v2','astroDash8.pilot.v1','astroDash8.pilot.v2']) localStorage.removeItem(k); }catch(err){}   // pre-rename keset: drop pre-release saves
 let scores = loadScores();
 let pilotName = (()=>{ try{ return (localStorage.getItem(LB_PILOT) || '').slice(0, NAME_MAX); }catch(err){ return ''; } })();
 function rememberPilot(n){ try{ localStorage.setItem(LB_PILOT, n); }catch(err){} }
@@ -867,8 +867,8 @@ function drawNameEntry(){
   const c = themes[0];
   ctx.fillStyle = c.sky; ctx.fillRect(0, 0, W, H);
   for(const st of stars){ px(ctx, st.x % W, st.y, 1, 1, st.c ? c.star2 : c.star); }
-  drawText(ctx, 'ASTRO', Math.round((W - textWidth('ASTRO', 2))/2), 8, C.c, 2);
-  drawText(ctx, 'DASH', Math.round((W - textWidth('DASH', 2))/2), 28, C.w, 2);
+  drawText(ctx, 'DILI', Math.round((W - textWidth('DILI', 2))/2), 8, C.c, 2);
+  drawText(ctx, 'ORBIT', Math.round((W - textWidth('ORBIT', 2))/2), 28, C.w, 2);
   textCenter(ctx, 'ENTER YOUR NAME', 52, C.Y);
   panel(58, 66, 140, 26);
   const cur = (Math.floor(game.t/18) % 2 === 0) ? '_' : ' ';
@@ -890,8 +890,8 @@ function drawTitle(){
   const c = themes[0];
   ctx.fillStyle = c.sky; ctx.fillRect(0, 0, W, H);
   for(const st of stars){ px(ctx, st.x % W, st.y, 1, 1, st.c ? c.star2 : c.star); }
-  drawText(ctx, 'ASTRO', Math.round((W - textWidth('ASTRO', 3))/2), 24, C.c, 3);
-  drawText(ctx, 'DASH', Math.round((W - textWidth('DASH', 3))/2), 50, C.w, 3);
+  drawText(ctx, 'DILI', Math.round((W - textWidth('DILI', 3))/2), 24, C.c, 3);
+  drawText(ctx, 'ORBIT', Math.round((W - textWidth('ORBIT', 3))/2), 50, C.w, 3);
   ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 84);
   if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, touchMode ? 'TAP TO START' : 'PRESS SPACE', 134, C.w);
   textCenter(ctx, 'MOVE: A/D OR ARROWS', 164, C.g);
@@ -1051,7 +1051,7 @@ game.state = ST.TITLE;
 requestAnimationFrame(frame);
 
 /* test / tooling hooks */
-window.__astro = {
+window.__dili = window.__astro = {
   get scores(){ return scores; }, get pilotName(){ return pilotName; },
   get state(){ return game.state; }, get game(){ return game; }, get level(){ return level; },
   get player(){ return player; }, get enemies(){ return enemies; }, get orbs(){ return orbs; },

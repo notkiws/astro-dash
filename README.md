@@ -1,14 +1,14 @@
-# ASTRO DASH 8-BIT — platformer luar angkasa gaya NES
+# DILI ORBIT — platformer luar angkasa gaya NES
 
 Game platformer satu file (HTML+canvas), gaya **8-bit NES**: resolusi internal **256 x 240**,
 tile 16 px, palet NES, sprite pixel art, font bitmap 5x7, dan musik chiptune. Tanpa internet,
-tanpa install, tanpa server — buka `8bit/astro-dash-8bit.html` di browser.
+tanpa install, tanpa server — buka `8bit/dili-orbit.html` di browser.
 
 Karakter: robot astronot biru (helm kaca, jubah, sepatu putih). Latar: tiga sektor luar angkasa —
 stasiun orbit, sabuk asteroid, kapal induk alien.
 
-- Live: <https://astrodash8.netlify.app/>
-- Repo: <https://github.com/notkiws/astro-dash>
+- Live: <https://diliorbit.netlify.app/>
+- Repo: <https://github.com/notkiws/dili-orbit>
 
 ## Kontrol
 
@@ -44,20 +44,20 @@ saat game dibuka.
     8bit/game8_template.html   template game (semua kode; level disuntik saat build)
     8bit/build8.py             build: validasi geometri + jangkauan, lalu tulis HTML
     8bit/levels.py             generator level 3 sektor + validasi fisika
-    8bit/astro-dash-8bit.html  hasil build (file yang dimainkan)
+    8bit/dili-orbit.html  hasil build (file yang dimainkan)
     8bit/KONSEP-8BIT.md        dokumen konsep 8-bit
     make_site.py               menyusun folder `dist/` untuk hosting
 
-    cd 8bit && python3 build8.py      # tulis ulang astro-dash-8bit.html
+    cd 8bit && python3 build8.py      # tulis ulang dili-orbit.html
     python3 make_site.py              # susun dist/ (index.html + gambar share)
 
 Setiap build **gagal** kalau ada platform atau orb yang tidak terjangkau busur lompatan, jadi
 level tidak bisa diam-diam punya tempat yang mustahil dinaiki.
 
-### Deploy ulang (Netlify site `astrodash8`)
+### Deploy ulang (Netlify site `diliorbit`)
 
     cd 8bit && python3 build8.py && cd .. && python3 make_site.py
-    netlify deploy --prod --dir=dist --site astrodash8
+    netlify deploy --prod --dir=dist --site diliorbit
 
-Alternatif otomatis: di Netlify -> "Import an existing project" -> GitHub -> `notkiws/astro-dash`
+Alternatif otomatis: di Netlify -> "Import an existing project" -> GitHub -> `notkiws/dili-orbit`
 (publish dir `dist/` sudah diatur di `netlify.toml`, tiap push langsung ter-deploy).
