@@ -27,18 +27,18 @@
                radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%)}
   #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;
     align-items:center;padding:10px 18px 18px;pointer-events:none;z-index:10}
-  #touch .side{display:flex;gap:22px;align-items:center;pointer-events:auto}
+  #touch .side{display:flex;gap:24px;align-items:center;pointer-events:auto}
   /* bare 8-bit glyphs: no box, no border, no background, just the shape */
-  .btn{width:74px;height:74px;border:0;padding:0;background:none;display:flex;align-items:center;
-    justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
+  .btn{width:84px;height:84px;border:0;padding:0;background:none;font-size:0;line-height:0;
+    color:transparent;display:flex;align-items:center;justify-content:center;
+    user-select:none;-webkit-user-select:none;touch-action:none;
     transition:transform .05s linear, opacity .05s linear}
-  .btn::before{content:"";display:block;width:46px;height:46px;
-    background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPElEQVR42mNgoBAwwhj/////j1chIyMjNnEmSl1AtAH/oWDgXIDLJfR3AdUNYCE54aClB/q5gGYpcRgAAOpFFBRfjrjrAAAAAElFTkSuQmCC") center/contain no-repeat;
+  .btn::before{content:"";display:block;width:64px;height:64px;
+    background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAoElEQVR42u2XzQ6AMAiDR8P7vzJejPEyHYPCQXsz++mX4jI2xtcl9w8zs2tARCoAMBuwU20AVSBYnciCgGcyIw3sLMoEQWRxBgSiG0TTQFYtd0GQ/Vd7IcA4Wp40MIhaAaECrJSlBOApjTKAmbTs3p9c7+g0pyew0tRolzGtBN5WTruM0wCizSs6zbcTyGzZtcvYXQLWQ0W7jF8Bqp5mvw73x1wmmsU54wAAAABJRU5ErkJggg==") center/contain no-repeat;
     image-rendering:pixelated;image-rendering:-webkit-optimize-contrast}
   /* base glyph points right; the left button is the mirrored copy */
   .btn[data-k="left"]::before{transform:scaleX(-1)}
-  .btn.jump{width:92px;height:92px}
-  .btn.jump::before{width:78px;height:78px;background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARUlEQVR42mNgoBAwYhP8////f6yKGRkZ8RqASyM+g5hI1YyulonSMGAi1XZ0V1DHBaMGYE9hxCYm6nmBFFcgq6U4M1EMAGFCHBrCoSQoAAAAAElFTkSuQmCC")}
+  .btn.jump::before{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjUlEQVR42u2XwQ7AIAhDpf//z+yyw2K2KQMryeBs+ioSQ1vbXGI5rKo6JSoioQZmwV+MyAqwxQhWw0daWA0faYIBf9MGC/7EwO5/AMzb37FydIB5+74LeWagDJSBMvBvA5YdLmwZPZl5noDZhSsr1xAyutAz4AkVEes5vMnGmw0QEa88wSR3NGOE0+11ADtiRDjNZwTUAAAAAElFTkSuQmCC")}
   .btn:active{transform:scale(.9);opacity:.6}
 </style>
 </head>
@@ -46,8 +46,8 @@
 <div id="wrap"><canvas id="c" width="256" height="240"></canvas></div>
 <div id="crt"></div>
 <div id="touch">
-  <div class="side"><button class="btn" data-k="left">&#9664;</button><button class="btn" data-k="right">&#9654;</button></div>
-  <div class="side"><button class="btn jump" data-k="jump">&#9650;</button></div>
+  <div class="side"><button class="btn" data-k="left" aria-label="move left"></button><button class="btn" data-k="right" aria-label="move right"></button></div>
+  <div class="side"><button class="btn jump" data-k="jump" aria-label="jump"></button></div>
 </div>
 <script>
 "use strict";
