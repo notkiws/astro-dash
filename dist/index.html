@@ -25,15 +25,20 @@
   #crt{position:fixed;inset:0;pointer-events:none;display:none;z-index:5;
     background:repeating-linear-gradient(to bottom, rgba(0,0,0,.30) 0 1px, rgba(0,0,0,0) 1px 3px),
                radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%)}
-  #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;
-    align-items:center;padding:10px 18px 18px;pointer-events:none;z-index:10}
-  #touch .side{display:flex;gap:24px;align-items:center;pointer-events:auto}
-  /* bare 8-bit glyphs: no box, no border, no background, just the shape */
-  .btn{width:84px;height:84px;border:0;padding:0;background:none;font-size:0;line-height:0;
-    color:transparent;display:flex;align-items:center;justify-content:center;
-    user-select:none;-webkit-user-select:none;touch-action:none;
+  /* Touch controls live inside the game box: this overlay is the same size and centring as
+     the canvas, so the buttons scale with the picture and never sit in the black letterbox
+     area. Everything is proportional (button = 16% of the game width, glyph = 72% of the
+     button) to stay out of the way. Visible only while actually playing. */
+  #touch{position:fixed;inset:0;margin:auto;width:min(100vw,106.667vh);height:min(93.75vw,100vh);
+    display:none;justify-content:space-between;align-items:flex-end;
+    padding:2.5% 3% 3.5%;pointer-events:none;z-index:10}
+  #touch .side{display:flex;gap:min(3.2vw,3.42vh);align-items:flex-end;pointer-events:auto}
+  /* bare 8-bit glyphs: no box, no border, no background, no label text */
+  .btn{width:min(16vw,17.07vh);height:min(16vw,17.07vh);border:0;padding:0;background:none;
+    font-size:0;line-height:0;color:transparent;display:flex;align-items:center;
+    justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
     transition:transform .05s linear, opacity .05s linear}
-  .btn::before{content:"";display:block;width:64px;height:64px;
+  .btn::before{content:"";display:block;width:72%;height:72%;
     background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAoElEQVR42u2XzQ6AMAiDR8P7vzJejPEyHYPCQXsz++mX4jI2xtcl9w8zs2tARCoAMBuwU20AVSBYnciCgGcyIw3sLMoEQWRxBgSiG0TTQFYtd0GQ/Vd7IcA4Wp40MIhaAaECrJSlBOApjTKAmbTs3p9c7+g0pyew0tRolzGtBN5WTruM0wCizSs6zbcTyGzZtcvYXQLWQ0W7jF8Bqp5mvw73x1wmmsU54wAAAABJRU5ErkJggg==") center/contain no-repeat;
     image-rendering:pixelated;image-rendering:-webkit-optimize-contrast}
   /* base glyph points right; the left button is the mirrored copy */
@@ -548,6 +553,7 @@ function respawnAtCheckpoint(){
 /* ------------------------------ step ------------------------------ */
 function step(){
   game.t++;
+  syncTouchUI();
   if(game.state === ST.CARD){ game.timer++; if(game.timer > 100) beginPlay(); }
   else if(game.state === ST.PLAY) updatePlay();
   else if(game.state === ST.CLEAR){ game.timer++; if(game.timer > 200) advance(); }
@@ -1155,7 +1161,15 @@ addEventListener('keyup', e=>{
 });
 const touchMode = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 const touchUI = document.getElementById('touch');
-if(touchMode) touchUI.style.display = 'flex';
+/* the controls only belong on screen while the player is actually playing */
+let touchShown = null;
+function syncTouchUI(){
+  const want = touchMode && game.state === ST.PLAY;
+  if(want === touchShown) return;
+  if(!want) touchUI.querySelectorAll('.btn').forEach(b=>{ keys[b.dataset.k] = false; });
+  touchShown = want;
+  touchUI.style.display = want ? 'flex' : 'none';
+}
 touchUI.querySelectorAll('.btn').forEach(b=>{
   const k = b.dataset.k;
   const on = ev=>{ ev.preventDefault(); unlockAudio(); if(!keys[k] && k === 'jump') jumpEdge = true; keys[k] = true;
