@@ -941,6 +941,20 @@ function drawScores(){
   textCenter(ctx, 'BACK', 196, C.w);
   textCenter(ctx, touchMode ? '(TAP ANYWHERE)' : '(BACKSPACE)', 210, C.g);
 }
+/* 3x5 labels for the wide words that have to fit a narrow keyboard cell. */
+const FONT_S = {'A':'010/101/111/101/101','B':'110/101/110/101/110','C':'011/100/100/100/011',
+  'D':'110/101/101/101/110','E':'111/100/110/100/111','K':'101/101/110/101/101','L':'100/100/100/100/111',
+  'O':'010/101/101/101/010'};
+function smallWidth(s){ return s.length*4 - 1; }
+function drawSmall(g, s, x, y, col){
+  g.fillStyle = col || C.w;
+  s = String(s).toUpperCase();
+  for(let i = 0; i < s.length; i++){
+    const glyph = FONT_S[s[i]]; if(!glyph) continue;
+    const rows = glyph.split('/'), gx = x + i*4;
+    for(let r = 0; r < 5; r++) for(let c2 = 0; c2 < 3; c2++) if(rows[r][c2] === '1') g.fillRect(gx + c2, y + r, 1, 1);
+  }
+}
 function drawKeyboard(){
   kbCells = [];
   const rows = ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', ['4','5','6','7','8','9','BACK','DEL','OK']];
@@ -953,7 +967,12 @@ function drawKeyboard(){
       panel(x + 1, y + 1, cw - 2, chh - 2);
       const col = k === 'OK' ? C.G : ((k === 'DEL' || k === 'BACK') ? C.o : C.w);
       const lbl = k === 'DEL' ? '<' : k;
-      drawText(ctx, lbl, x + Math.round((cw - textWidth(lbl))/2), y + 7, col);
+      /* the cell has cw-2 usable px: drop to the 3x5 font rather than run into the border */
+      if(textWidth(lbl) <= cw - 2 || !lbl.split('').every(c => FONT_S[c])){
+        drawText(ctx, lbl, x + Math.round((cw - textWidth(lbl))/2), y + 7, col);
+      } else {
+        drawSmall(ctx, lbl, x + Math.round((cw - smallWidth(lbl))/2), y + 8, col);
+      }
       kbCells.push({x:x, y:y, w:cw, h:chh, k:k});
     }
   }
@@ -969,7 +988,7 @@ function drawNameEntry(){
   drawText(ctx, txt, Math.round((W - textWidth(txt, 2))/2), 72, C.w, 2);
   if(touchMode){
     drawKeyboard();
-    textCenter(ctx, 'BACK = TITLE   OK = START', 190, C.g);
+    textCenter(ctx, 'BACK = MAIN MENU   OK = START', 190, C.g);
   } else {
     textCenter(ctx, 'A-Z  0-9  UP TO ' + NAME_MAX, 100, C.g);
     textCenter(ctx, 'ENTER = START', 112, C.w);
