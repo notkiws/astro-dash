@@ -954,7 +954,7 @@ function drawSmall(g, s, x, y, col){
 function drawKeyboard(){
   kbCells = [];
   const rows = ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', ['4','5','6','7','8','9','BACK','DEL','OK']];
-  const cw = 24, chh = 21, y0 = 96;
+  const cw = 24, chh = 21, y0 = 113;   /* follows the name-screen block, which sits 17px lower */
   for(let r = 0; r < rows.length; r++){
     const items = Array.isArray(rows[r]) ? rows[r] : rows[r].split('');
     const sx = Math.round((W - items.length*cw)/2);
@@ -973,25 +973,27 @@ function drawKeyboard(){
     }
   }
 }
+/* The block runs from y25 to y214: measured margins of 25 above and 26 below, matching the
+   title screen, instead of the old 8 above and 43 below. */
 function drawNameEntry(){
   drawStarfield();
-  drawText(ctx, 'DILI', Math.round((W - textWidth('DILI', 2))/2), 8, C.c, 2);
-  drawText(ctx, 'ORBIT', Math.round((W - textWidth('ORBIT', 2))/2), 28, C.w, 2);
-  textCenter(ctx, 'ENTER YOUR NAME', 52, C.Y);
-  panel(58, 66, 140, 26);
+  drawText(ctx, 'DILI', Math.round((W - textWidth('DILI', 2))/2), 25, C.c, 2);
+  drawText(ctx, 'ORBIT', Math.round((W - textWidth('ORBIT', 2))/2), 45, C.w, 2);
+  textCenter(ctx, 'ENTER YOUR NAME', 69, C.Y);
+  panel(58, 83, 140, 26);
   const cur = (Math.floor(game.t/18) % 2 === 0) ? '_' : ' ';
   const txt = pilotName + cur;
-  drawText(ctx, txt, Math.round((W - textWidth(txt, 2))/2), 72, C.w, 2);
+  drawText(ctx, txt, Math.round((W - textWidth(txt, 2))/2), 89, C.w, 2);
   if(touchMode){
     drawKeyboard();
-    textCenter(ctx, 'BACK = MAIN MENU   OK = START', 190, C.g);
+    textCenter(ctx, 'BACK = MAIN MENU   OK = START', 207, C.g);
   } else {
-    textCenter(ctx, 'A-Z  0-9  UP TO ' + NAME_MAX, 100, C.g);
-    textCenter(ctx, 'ENTER = START', 112, C.w);
-    textCenter(ctx, 'BACKSPACE = DELETE', 122, C.g);
-    textCenter(ctx, '(EMPTY + BACKSPACE = BACK)', 134, C.g);
-    if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, 'START TYPING', 150, C.c);
-    ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 168);
+    textCenter(ctx, 'A-Z  0-9  UP TO ' + NAME_MAX, 117, C.g);
+    textCenter(ctx, 'ENTER = START', 129, C.w);
+    textCenter(ctx, 'BACKSPACE = DELETE', 139, C.g);
+    textCenter(ctx, '(EMPTY + BACKSPACE = BACK)', 151, C.g);
+    if(Math.floor(game.t/20) % 2 === 0) textCenter(ctx, 'START TYPING', 167, C.c);
+    ctx.drawImage(SPR.heroIdle, Math.round(W/2) - 8, 185);
   }
 }
 
