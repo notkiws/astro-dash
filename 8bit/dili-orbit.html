@@ -25,16 +25,23 @@
   #crt{position:fixed;inset:0;pointer-events:none;display:none;z-index:5;
     background:repeating-linear-gradient(to bottom, rgba(0,0,0,.30) 0 1px, rgba(0,0,0,0) 1px 3px),
                radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%)}
-  /* Touch controls live inside the game box: this overlay is the same size and centring as
-     the canvas, so the buttons scale with the picture and never sit in the black letterbox
-     area. Everything is proportional (button = 16% of the game width, glyph = 72% of the
-     button) to stay out of the way. Visible only while actually playing. */
-  #touch{position:fixed;inset:0;margin:auto;width:min(100vw,106.667vh);height:min(93.75vw,100vh);
-    display:none;justify-content:space-between;align-items:flex-end;
-    padding:2.5% 3% 3.5%;pointer-events:none;z-index:10}
-  #touch .side{display:flex;gap:min(3.2vw,3.42vh);align-items:flex-end;pointer-events:auto}
+  /* Touch controls are anchored to the game box, never over the picture.
+     Portrait: the game keeps its 4:3 ratio, so there is a black margin under the canvas -
+     exactly where the thumb arc sits - and the buttons live there, flush with the box's left
+     and right edges so they read as part of the frame. Nothing in the level is covered.
+     Landscape: the canvas fills the height, so there is no margin to use and they become an
+     overlay on the box's bottom corners (the usual convention for ports at this ratio).
+     Everything is proportional: button = 18% of the game width, glyph = 72% of the button. */
+  #touch{position:fixed;left:50%;transform:translateX(-50%);width:min(100vw,106.667vh);
+    top:calc(50% + min(93.75vw,100vh)/2);display:none;justify-content:space-between;
+    align-items:flex-start;padding:1.5% 2% 0;pointer-events:none;z-index:10}
+  @media (orientation:landscape){
+    #touch{top:auto;bottom:0;height:min(100vh,93.75vw);align-items:flex-end;
+      padding:0 2% calc(2% + env(safe-area-inset-bottom,0px))}
+  }
+  #touch .side{display:flex;gap:min(3.6vw,3.84vh);align-items:center;pointer-events:auto}
   /* bare 8-bit glyphs: no box, no border, no background, no label text */
-  .btn{width:min(16vw,17.07vh);height:min(16vw,17.07vh);border:0;padding:0;background:none;
+  .btn{width:min(18vw,19.2vh);height:min(18vw,19.2vh);border:0;padding:0;background:none;
     font-size:0;line-height:0;color:transparent;display:flex;align-items:center;
     justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
     transition:transform .05s linear, opacity .05s linear}
