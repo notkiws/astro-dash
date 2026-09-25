@@ -40,18 +40,25 @@
       padding:0 2% calc(2% + env(safe-area-inset-bottom,0px))}
   }
   #touch .side{display:flex;gap:min(3.6vw,3.84vh);align-items:center;pointer-events:auto}
-  /* bare 8-bit glyphs: no box, no border, no background, no label text */
+  /* bare 8-bit glyphs: no box, no border, no background, no label text.
+     Drawn in the game's own palette (white outline, light edge lit from the top-left, darker
+     edge bottom-right) so the controls read as part of the game rather than flat shapes. */
   .btn{width:min(18vw,19.2vh);height:min(18vw,19.2vh);border:0;padding:0;background:none;
     font-size:0;line-height:0;color:transparent;display:flex;align-items:center;
     justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
     transition:transform .05s linear, opacity .05s linear}
   .btn::before{content:"";display:block;width:72%;height:72%;
-    background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAoElEQVR42u2XzQ6AMAiDR8P7vzJejPEyHYPCQXsz++mX4jI2xtcl9w8zs2tARCoAMBuwU20AVSBYnciCgGcyIw3sLMoEQWRxBgSiG0TTQFYtd0GQ/Vd7IcA4Wp40MIhaAaECrJSlBOApjTKAmbTs3p9c7+g0pyew0tRolzGtBN5WTruM0wCizSs6zbcTyGzZtcvYXQLWQ0W7jF8Bqp5mvw73x1wmmsU54wAAAABJRU5ErkJggg==") center/contain no-repeat;
+    background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA1ElEQVR42u2XvQ2DQAyFzclDZLQUGYNhKChTZJAMwQgZwhKpjBB/wefnuxS8kuPkz89PFhBdqqxm70BExr0zZm6KALw+6+f3GxaCf73QDdsQ6pAXhK0X5kAK4oHgnEtIiOSxrxuINCciMh4FF+oA0g1GJNkDkZBLZTmS4gA5uWAKkGUkIQAWiETBmo+kSAa29GilHsC7F5Inlw2hFiaiqXjREC67PlpKHFn8zDZMNYvDHDg77xAAy7zhADmWQwA8lrsBvJabAbTb6XMd0PVf/Zhcqq4vaqKFfyoqBAcAAAAASUVORK5CYII=") center/contain no-repeat;
     image-rendering:pixelated;image-rendering:-webkit-optimize-contrast}
   /* base glyph points right; the left button is the mirrored copy */
   .btn[data-k="left"]::before{transform:scaleX(-1)}
-  .btn.jump::before{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjUlEQVR42u2XwQ7AIAhDpf//z+yyw2K2KQMryeBs+ioSQ1vbXGI5rKo6JSoioQZmwV+MyAqwxQhWw0daWA0faYIBf9MGC/7EwO5/AMzb37FydIB5+74LeWagDJSBMvBvA5YdLmwZPZl5noDZhSsr1xAyutAz4AkVEes5vMnGmw0QEa88wSR3NGOE0+11ADtiRDjNZwTUAAAAAElFTkSuQmCC")}
-  .btn:active{transform:scale(.9);opacity:.6}
+  .btn.jump::before{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABG0lEQVR42u2Xuw3CMBBAbeuGoMgADMAgFCk8DoMwQAoKioyQkgEYgIIhTgoFxHL8y/liCyRyVSJZec/nu9gW4t9DUgci4pjzYQCQRQRm4MeFRm9asgiQ4B8w3jVt9qIzIog4piQkBU4FeyL7zmQjJqFqwU3GpuxFakjVglMlVE04RcJfgsLwkERQILfPOXE9a48lZwIZs9/pg3l+drfszpi6QnFmYsND75QsJNswB86RYAssQTgSqhScKwHUgW6hcYtw1RLUiE3gxwSa9v2nqhT9IMTxhOEuAACZsx+sqXz7cKJC57kaWQjN3hMwZoUlbLh7NFPR9BSSSMGjXVBKYgmebENXoh/ywBQ462Li7uehsItt6WLy9avZFi9Nl6kx2q3zMAAAAABJRU5ErkJggg==")}
+  /* pressed: the bevel flips and the button is pushed down a couple of pixels. The touch
+     handlers call preventDefault(), which suppresses :active on mobile, so they also toggle
+     the .press class - that class is what actually drives this state on a phone. */
+  .btn:active, .btn.press{transform:translateY(2px) scale(.97)}
+  .btn:active::before, .btn.press::before{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA4ElEQVR42u2XzQ2DMAyFjeUhGKFDdBAOHHvoMB0gA/TQkTICQ0RqDxVFRfz5L77gCxIJysd7T3ECcFZwNWsDpZT32hgRNVUAqC9/754Pgq61haC9CdfbNCXl77NrJ4W0IMj9IGUA6gu8hn2rXABGVVIGEwjU0M8hJCCoDZHWErRIssYStNxUJBCmAJJcmANwc+ECwMmFG8CSJSEA1UM4r/sFfg1M1Iw0C4+Na6tpUY2/3uqY5Ln4kVaNkYubKXDUbxcAjt/mABLJTQA0kqsBtJKzjuVLe7j1sTz8YnJWeH0AgNh1rWkj0n0AAAAASUVORK5CYII=")}
+  .btn.jump:active::before, .btn.jump.press::before{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABHUlEQVR42u2XsQ2DMBBFzycPkYIBMkDKjJAiBQUDZJCMQ0GRghEoM0AGoMgQJ5ECYTmxY874TIpwFSCL92zO4hvg30txBxLREPNirbUSEbDBt6uefeH5UgMUJVtEceAT+HTkzb7t3kVCEooD54Kdz7Cfl8BccAAAelQAfRPsIcwF50pgTjhHwlkBabhPwisQu8+TZCyWsh/GzH5XHcz1s75H74xpV+CSGdhw331MYSo8VQIl4CkSKAVfKqG5Az8bbWkTJveAdG0C6ISJn65AUULb5YPZ+cAbSIhogL4ZfxwZBexw4vZAUY4DV5i9I2DMhCVC0Qy/xmkhiblciMFMnyjBCaWsWG7iFLM5jXRKLPcmJU+k8pbUwWSNo9lWL8f8kBzqAEA0AAAAAElFTkSuQmCC")}
 </style>
 </head>
 <body>
@@ -1173,20 +1180,20 @@ let touchShown = null;
 function syncTouchUI(){
   const want = touchMode && game.state === ST.PLAY;
   if(want === touchShown) return;
-  if(!want) touchUI.querySelectorAll('.btn').forEach(b=>{ keys[b.dataset.k] = false; });
+  if(!want) touchUI.querySelectorAll('.btn').forEach(b=>{ b.classList.remove('press'); keys[b.dataset.k] = false; });
   touchShown = want;
   touchUI.style.display = want ? 'flex' : 'none';
 }
 touchUI.querySelectorAll('.btn').forEach(b=>{
   const k = b.dataset.k;
-  const on = ev=>{ ev.preventDefault(); unlockAudio(); if(!keys[k] && k === 'jump') jumpEdge = true; keys[k] = true;
+  const on = ev=>{ ev.preventDefault(); b.classList.add('press'); unlockAudio(); if(!keys[k] && k === 'jump') jumpEdge = true; keys[k] = true;
     if(game.state === ST.TITLE) game.state = ST.NAME;
     else if(game.state === ST.NAME && k === 'jump') confirmName();
     else if(game.state === ST.SCORES && k === 'jump') closeScores();
     else if((game.state === ST.OVER || game.state === ST.WIN) && k === 'jump') playAgain();
     else if(game.state === ST.OPTIONS && k === 'jump') game.state = ST.TITLE;
     else if(game.state !== ST.PLAY && k === 'jump') advance(); };
-  const off = ev=>{ ev.preventDefault(); keys[k] = false; };
+  const off = ev=>{ ev.preventDefault(); b.classList.remove('press'); keys[k] = false; };
   b.addEventListener('touchstart', on, {passive:false});
   b.addEventListener('touchend', off, {passive:false});
   b.addEventListener('touchcancel', off, {passive:false});
