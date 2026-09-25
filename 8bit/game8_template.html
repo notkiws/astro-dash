@@ -26,13 +26,20 @@
     background:repeating-linear-gradient(to bottom, rgba(0,0,0,.30) 0 1px, rgba(0,0,0,0) 1px 3px),
                radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%)}
   #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;
-    padding:8px 12px 14px;pointer-events:none;z-index:10}
-  #touch .side{display:flex;gap:10px;pointer-events:auto}
-  .btn{width:62px;height:62px;border:0;border-radius:4px;background:#1b1b3a;color:#a4e4fc;
-    font-family:inherit;font-size:20px;display:flex;align-items:center;justify-content:center;
-    border-bottom:4px solid #0a0a1e;user-select:none;-webkit-user-select:none}
-  .btn:active{background:#3cbcfc;color:#101034}
-  .btn.jump{width:76px;height:76px;background:#3a1b1b;color:#fce0a8;border-bottom-color:#1a0808}
+    align-items:center;padding:10px 18px 18px;pointer-events:none;z-index:10}
+  #touch .side{display:flex;gap:22px;align-items:center;pointer-events:auto}
+  /* bare 8-bit glyphs: no box, no border, no background, just the shape */
+  .btn{width:74px;height:74px;border:0;padding:0;background:none;display:flex;align-items:center;
+    justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
+    transition:transform .05s linear, opacity .05s linear}
+  .btn::before{content:"";display:block;width:46px;height:46px;
+    background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPElEQVR42mNgoBAwwhj/////j1chIyMjNnEmSl1AtAH/oWDgXIDLJfR3AdUNYCE54aClB/q5gGYpcRgAAOpFFBRfjrjrAAAAAElFTkSuQmCC") center/contain no-repeat;
+    image-rendering:pixelated;image-rendering:-webkit-optimize-contrast}
+  /* base glyph points right; the left button is the mirrored copy */
+  .btn[data-k="left"]::before{transform:scaleX(-1)}
+  .btn.jump{width:92px;height:92px}
+  .btn.jump::before{width:78px;height:78px;background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARUlEQVR42mNgoBAwYhP8////f6yKGRkZ8RqASyM+g5hI1YyulonSMGAi1XZ0V1DHBaMGYE9hxCYm6nmBFFcgq6U4M1EMAGFCHBrCoSQoAAAAAElFTkSuQmCC")}
+  .btn:active{transform:scale(.9);opacity:.6}
 </style>
 </head>
 <body>
